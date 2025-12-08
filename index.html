@@ -34,10 +34,21 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <!-- Google Identity Services (GIS) for OAuth -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Google API Client Library -->
+    <script src="https://apis.google.com/js/api.js" async defer></script>
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <script>
+        // Google OAuth Configuration
+        // Client ID from Google Cloud Console
+        const GOOGLE_CLIENT_ID = '954625996756-24hluphadcuu5pdrb35s43a0sra38p4m.apps.googleusercontent.com';
+        const GOOGLE_API_KEY = 'YOUR_API_KEY_HERE'; // Optional, for API quota
+        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+
         // Check if libraries loaded
         window.addEventListener('load', function () {
             if (!window.React || !window.ReactDOM || !window.Babel) {
@@ -149,7 +160,11 @@
             MoreHorizontal: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>,
             Settings: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>,
             Users: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
-            X: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            X: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>,
+            Cloud: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" /></svg>,
+            Upload: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>,
+            Download: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-15" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>,
+            CheckCircle: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
         };
 
         const CATEGORIES = [
@@ -159,6 +174,202 @@
             { id: 'shopping', label: 'Shopping', icon: Icons.ShoppingBag, color: 'bg-pink-500' },
             { id: 'other', label: 'Other', icon: Icons.MoreHorizontal, color: 'bg-gray-500' },
         ];
+
+        // --- Google Drive Sync Manager ---
+        const GoogleDriveSync = {
+            accessToken: null,
+            tokenClient: null,
+            gapiInitialized: false,
+            gisInitialized: false,
+            fileId: localStorage.getItem('gdrive_file_id') || null,
+
+            // Initialize Google API client
+            initGapi: function () {
+                return new Promise((resolve) => {
+                    if (typeof gapi === 'undefined') {
+                        console.warn('Google API not loaded');
+                        resolve(false);
+                        return;
+                    }
+
+                    gapi.load('client', async () => {
+                        try {
+                            await gapi.client.init({
+                                apiKey: GOOGLE_API_KEY,
+                                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                            });
+                            this.gapiInitialized = true;
+                            resolve(true);
+                        } catch (error) {
+                            console.error('Error initializing GAPI:', error);
+                            resolve(false);
+                        }
+                    });
+                });
+            },
+
+            // Initialize Google Identity Services
+            initGIS: function (callback) {
+                if (typeof google === 'undefined' || !google.accounts) {
+                    console.warn('Google Identity Services not loaded');
+                    return false;
+                }
+
+                this.tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: GOOGLE_CLIENT_ID,
+                    scope: SCOPES,
+                    callback: (response) => {
+                        if (response.error) {
+                            console.error('Token error:', response);
+                            callback({ success: false, error: response.error });
+                            return;
+                        }
+                        this.accessToken = response.access_token;
+                        gapi.client.setToken({ access_token: this.accessToken });
+                        callback({ success: true });
+                    },
+                });
+                this.gisInitialized = true;
+                return true;
+            },
+
+            // Request access token
+            requestAccessToken: function (callback) {
+                if (!this.gisInitialized) {
+                    if (!this.initGIS(callback)) {
+                        callback({ success: false, error: 'GIS not available' });
+                        return;
+                    }
+                }
+
+                if (this.tokenClient) {
+                    this.tokenClient.requestAccessToken({ prompt: '' });
+                }
+            },
+
+            // Check if signed in
+            isSignedIn: function () {
+                return this.accessToken !== null;
+            },
+
+            // Sign out
+            signOut: function () {
+                if (this.accessToken) {
+                    google.accounts.oauth2.revoke(this.accessToken, () => {
+                        console.log('Token revoked');
+                    });
+                }
+                this.accessToken = null;
+                gapi.client.setToken(null);
+            },
+
+            // Get all budget data from localStorage
+            getBudgetData: function () {
+                return {
+                    version: '1.0',
+                    lastModified: new Date().toISOString(),
+                    data: {
+                        personalMembers: JSON.parse(localStorage.getItem('travel_budget_personal_members') || '[]'),
+                        budgets: JSON.parse(localStorage.getItem('travel_budget_map') || '{}'),
+                        groups: JSON.parse(localStorage.getItem('travel_budget_groups') || '{}'),
+                        expenses: JSON.parse(localStorage.getItem('travel_budget_expenses') || '[]'),
+                    }
+                };
+            },
+
+            // Upload to Google Drive
+            uploadToDrive: async function () {
+                if (!this.gapiInitialized) {
+                    await this.initGapi();
+                }
+
+                if (!this.isSignedIn()) {
+                    throw new Error('Not signed in');
+                }
+
+                const budgetData = this.getBudgetData();
+                const content = JSON.stringify(budgetData, null, 2);
+                const blob = new Blob([content], { type: 'application/json' });
+
+                try {
+                    if (this.fileId) {
+                        // Update existing file
+                        const response = await gapi.client.request({
+                            path: `/upload/drive/v3/files/${this.fileId}`,
+                            method: 'PATCH',
+                            params: { uploadType: 'media' },
+                            body: content
+                        });
+                        return { success: true, fileId: this.fileId, action: 'updated' };
+                    } else {
+                        // Create new file
+                        const metadata = {
+                            name: 'budget-data.json',
+                            mimeType: 'application/json',
+                        };
+
+                        const form = new FormData();
+                        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+                        form.append('file', blob);
+
+                        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                            method: 'POST',
+                            headers: new Headers({ 'Authorization': 'Bearer ' + this.accessToken }),
+                            body: form
+                        });
+
+                        const result = await response.json();
+                        this.fileId = result.id;
+                        localStorage.setItem('gdrive_file_id', result.id);
+                        return { success: true, fileId: result.id, action: 'created' };
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    throw error;
+                }
+            },
+
+            // Download from Google Drive
+            downloadFromDrive: async function () {
+                if (!this.gapiInitialized) {
+                    await this.initGapi();
+                }
+
+                if (!this.isSignedIn()) {
+                    throw new Error('Not signed in');
+                }
+
+                if (!this.fileId) {
+                    throw new Error('No file ID found');
+                }
+
+                try {
+                    const response = await gapi.client.drive.files.get({
+                        fileId: this.fileId,
+                        alt: 'media'
+                    });
+
+                    return response.result;
+                } catch (error) {
+                    console.error('Download error:', error);
+                    throw error;
+                }
+            },
+
+            // Restore data to localStorage
+            restoreData: function (budgetData) {
+                if (!budgetData.data) {
+                    throw new Error('Invalid data format');
+                }
+
+                localStorage.setItem('travel_budget_personal_members', JSON.stringify(budgetData.data.personalMembers || []));
+                localStorage.setItem('travel_budget_map', JSON.stringify(budgetData.data.budgets || {}));
+                localStorage.setItem('travel_budget_groups', JSON.stringify(budgetData.data.groups || {}));
+                localStorage.setItem('travel_budget_expenses', JSON.stringify(budgetData.data.expenses || []));
+
+                return { success: true };
+            }
+        };
 
         // --- Components ---
 
@@ -989,6 +1200,246 @@
         };
 
         // =================================
+        // GOOGLE DRIVE SYNC CARD COMPONENT
+        // =================================
+        const GoogleDriveSyncCard = () => {
+            const [isSignedIn, setIsSignedIn] = useState(false);
+            const [isSyncing, setIsSyncing] = useState(false);
+            const [syncStatus, setSyncStatus] = useState('');
+            const [lastSynced, setLastSynced] = useState(localStorage.getItem('last_synced') || null);
+            const [autoSync, setAutoSync] = useState(localStorage.getItem('auto_sync') === 'true');
+            const [showConflict, setShowConflict] = useState(false);
+            const [remoteData, setRemoteData] = useState(null);
+
+            // Check if credentials are configured
+            const credentialsConfigured = GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes('YOUR_CLIENT_ID');
+
+            // Initialize GAPI on mount
+            useEffect(() => {
+                if (credentialsConfigured && typeof gapi !== 'undefined') {
+                    GoogleDriveSync.initGapi();
+                }
+            }, []);
+
+            const handleSignIn = () => {
+                if (!credentialsConfigured) {
+                    alert('Please configure your Google OAuth Client ID first. See the code for instructions.');
+                    return;
+                }
+
+                GoogleDriveSync.requestAccessToken((response) => {
+                    if (response.success) {
+                        setIsSignedIn(true);
+                        setSyncStatus('Signed in successfully!');
+                        setTimeout(() => setSyncStatus(''), 3000);
+                    } else {
+                        setSyncStatus('Sign-in failed: ' + response.error);
+                    }
+                });
+            };
+
+            const handleSignOut = () => {
+                GoogleDriveSync.signOut();
+                setIsSignedIn(false);
+                setSyncStatus('Signed out');
+                setTimeout(() => setSyncStatus(''), 3000);
+            };
+
+            const handleUpload = async () => {
+                if (!isSignedIn) {
+                    handleSignIn();
+                    return;
+                }
+
+                setIsSyncing(true);
+                setSyncStatus('Uploading to Google Drive...');
+
+                try {
+                    const result = await GoogleDriveSync.uploadToDrive();
+                    const timestamp = new Date().toISOString();
+                    setLastSynced(timestamp);
+                    localStorage.setItem('last_synced', timestamp);
+                    setSyncStatus(`Successfully ${result.action} backup!`);
+                    setTimeout(() => setSyncStatus(''), 3000);
+                } catch (error) {
+                    setSyncStatus('Upload failed: ' + error.message);
+                } finally {
+                    setIsSyncing(false);
+                }
+            };
+
+            const handleDownload = async () => {
+                if (!isSignedIn) {
+                    handleSignIn();
+                    return;
+                }
+
+                setIsSyncing(true);
+                setSyncStatus('Downloading from Google Drive...');
+
+                try {
+                    const data = await GoogleDriveSync.downloadFromDrive();
+
+                    // Check if there's local data
+                    const hasLocalData = localStorage.getItem('travel_budget_expenses');
+
+                    if (hasLocalData) {
+                        // Show conflict dialog
+                        setRemoteData(data);
+                        setShowConflict(true);
+                        setSyncStatus('');
+                    } else {
+                        // No local data, just restore
+                        GoogleDriveSync.restoreData(data);
+                        setSyncStatus('Data restored successfully! Please refresh the page.');
+                    }
+                } catch (error) {
+                    setSyncStatus('Download failed: ' + error.message);
+                } finally {
+                    setIsSyncing(false);
+                }
+            };
+
+            const handleConflictResolve = (choice) => {
+                if (choice === 'remote') {
+                    GoogleDriveSync.restoreData(remoteData);
+                    setSyncStatus('Data restored from Google Drive! Please refresh the page.');
+                } else {
+                    setSyncStatus('Kept local data');
+                }
+                setShowConflict(false);
+                setRemoteData(null);
+                setTimeout(() => setSyncStatus(''), 3000);
+            };
+
+            const toggleAutoSync = () => {
+                const newValue = !autoSync;
+                setAutoSync(newValue);
+                localStorage.setItem('auto_sync', newValue.toString());
+            };
+
+            // Auto-sync effect
+            useEffect(() => {
+                if (autoSync && isSignedIn && !isSyncing) {
+                    const interval = setInterval(() => {
+                        handleUpload();
+                    }, 5 * 60 * 1000); // Every 5 minutes
+
+                    return () => clearInterval(interval);
+                }
+            }, [autoSync, isSignedIn, isSyncing]);
+
+            return (
+                <>
+                    <Card>
+                        <div className="flex items-center justify-between mb-3">
+                            <label className="text-sm text-gray-400 flex items-center gap-2">
+                                <Icons.Cloud />
+                                Google Drive Sync
+                            </label>
+                            {!credentialsConfigured && (
+                                <span className="text-xs text-yellow-400">⚠️ Not configured</span>
+                            )}
+                        </div>
+
+                        {!credentialsConfigured ? (
+                            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-xs text-yellow-200">
+                                <p className="mb-2">To enable Google Drive sync:</p>
+                                <ol className="list-decimal list-inside space-y-1 text-[11px]">
+                                    <li>Create a Google Cloud project</li>
+                                    <li>Enable Google Drive API</li>
+                                    <li>Create OAuth 2.0 credentials</li>
+                                    <li>Update GOOGLE_CLIENT_ID in the code</li>
+                                </ol>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Sign In/Out */}
+                                {!isSignedIn ? (
+                                    <Button onClick={handleSignIn} className="w-full mb-3" variant="secondary">
+                                        <Icons.Cloud />
+                                        Sign in with Google
+                                    </Button>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {/* Sync Controls */}
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <Button onClick={handleUpload} disabled={isSyncing} variant="secondary" className="!py-2">
+                                                <Icons.Upload />
+                                                Backup
+                                            </Button>
+                                            <Button onClick={handleDownload} disabled={isSyncing} variant="secondary" className="!py-2">
+                                                <Icons.Download />
+                                                Restore
+                                            </Button>
+                                        </div>
+
+                                        {/* Auto-sync Toggle */}
+                                        <div className="flex items-center justify-between bg-white/5 p-3 rounded-lg">
+                                            <span className="text-sm">Auto-sync (5 min)</span>
+                                            <button
+                                                onClick={toggleAutoSync}
+                                                className={`w-12 h-6 rounded-full transition-colors ${autoSync ? 'bg-indigo-500' : 'bg-gray-600'}`}
+                                            >
+                                                <div className={`w-5 h-5 bg-white rounded-full transition-transform ${autoSync ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            </button>
+                                        </div>
+
+                                        {/* Last Synced */}
+                                        {lastSynced && (
+                                            <div className="text-xs text-gray-400 flex items-center gap-1">
+                                                <Icons.CheckCircle />
+                                                Last synced: {new Date(lastSynced).toLocaleString()}
+                                            </div>
+                                        )}
+
+                                        {/* Sign Out */}
+                                        <Button onClick={handleSignOut} variant="ghost" className="w-full !py-1 text-xs">
+                                            Sign out
+                                        </Button>
+                                    </div>
+                                )}
+
+                                {/* Status */}
+                                {syncStatus && (
+                                    <div className={`mt-3 p-2 rounded-lg text-xs ${syncStatus.includes('failed') || syncStatus.includes('error')
+                                        ? 'bg-red-500/20 text-red-200'
+                                        : 'bg-green-500/20 text-green-200'
+                                        }`}>
+                                        {syncStatus}
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </Card>
+
+                    {/* Conflict Resolution Dialog */}
+                    {showConflict && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                            <Card className="max-w-md w-full">
+                                <h3 className="text-lg font-bold mb-3">Data Conflict Detected</h3>
+                                <p className="text-sm text-gray-300 mb-4">
+                                    You have local budget data. Which version would you like to keep?
+                                </p>
+                                <div className="space-y-2">
+                                    <Button onClick={() => handleConflictResolve('remote')} className="w-full" variant="primary">
+                                        Use Google Drive Data (Replace Local)
+                                    </Button>
+                                    <Button onClick={() => handleConflictResolve('local')} className="w-full" variant="secondary">
+                                        Keep Local Data
+                                    </Button>
+                                </div>
+                                <p className="text-xs text-yellow-400 mt-3">
+                                    ⚠️ Warning: This action cannot be undone. Consider backing up first.
+                                </p>
+                            </Card>
+                        </div>
+                    )}
+                </>
+            );
+        };
+
+        // =================================
         // SETTINGS COMPONENT
         // =================================
         const Settings = ({
@@ -1157,6 +1608,9 @@
                                 ))}
                             </div>
                         </Card>
+
+                        {/* Google Drive Sync */}
+                        <GoogleDriveSyncCard />
 
                         <Button className="w-full" onClick={handleSaveSettings}>Save Changes</Button>
                     </div>
