@@ -177,11 +177,12 @@
 
         // --- Google Drive Sync Manager ---
         const GoogleDriveSync = {
-            accessToken: null,
+            accessToken: localStorage.getItem('gdrive_access_token') || null,
             tokenClient: null,
             gapiInitialized: false,
             gisInitialized: false,
             fileId: localStorage.getItem('gdrive_file_id') || null,
+            tokenExpiry: localStorage.getItem('gdrive_token_expiry') || null,
 
             // Initialize Google API client
             initGapi: function () {
@@ -225,6 +226,12 @@
                             return;
                         }
                         this.accessToken = response.access_token;
+                        // Store token in localStorage
+                        localStorage.setItem('gdrive_access_token', this.accessToken);
+                        // Tokens typically expire in 1 hour
+                        const expiry = new Date().getTime() + (3600 * 1000);
+                        localStorage.setItem('gdrive_token_expiry', expiry.toString());
+                        this.tokenExpiry = expiry;
                         gapi.client.setToken({ access_token: this.accessToken });
                         callback({ success: true });
                     },
@@ -249,18 +256,60 @@
 
             // Check if signed in
             isSignedIn: function () {
-                return this.accessToken !== null;
+                // Check if token exists and hasn't expired
+                if (!this.accessToken || !this.tokenExpiry) return false;
+                const now = new Date().getTime();
+                const expiry = parseInt(this.tokenExpiry);
+                if (now >= expiry) {
+                    // Token expired, clear it
+                    this.clearToken();
+                    return false;
+                }
+                return true;
+            },
+
+            // Clear token from memory and storage
+            clearToken: function () {
+                this.accessToken = null;
+                this.tokenExpiry = null;
+                localStorage.removeItem('gdrive_access_token');
+                localStorage.removeItem('gdrive_token_expiry');
+                if (typeof gapi !== 'undefined' && gapi.client) {
+                    gapi.client.setToken(null);
+                }
+            },
+
+            // Restore token from localStorage
+            restoreToken: async function () {
+                if (!this.accessToken || !this.tokenExpiry) return false;
+
+                // Check if token is expired
+                const now = new Date().getTime();
+                const expiry = parseInt(this.tokenExpiry);
+                if (now >= expiry) {
+                    this.clearToken();
+                    return false;
+                }
+
+                // Token is valid, restore it
+                if (!this.gapiInitialized) {
+                    await this.initGapi();
+                }
+                if (typeof gapi !== 'undefined' && gapi.client) {
+                    gapi.client.setToken({ access_token: this.accessToken });
+                    return true;
+                }
+                return false;
             },
 
             // Sign out
             signOut: function () {
-                if (this.accessToken) {
+                if (this.accessToken && typeof google !== 'undefined' && google.accounts) {
                     google.accounts.oauth2.revoke(this.accessToken, () => {
                         console.log('Token revoked');
                     });
                 }
-                this.accessToken = null;
-                gapi.client.setToken(null);
+                this.clearToken();
             },
 
             // Get all budget data from localStorage
@@ -1214,11 +1263,21 @@
             // Check if credentials are configured
             const credentialsConfigured = GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes('YOUR_CLIENT_ID');
 
-            // Initialize GAPI on mount
+            // Initialize GAPI on mount and restore token if available
             useEffect(() => {
-                if (credentialsConfigured && typeof gapi !== 'undefined') {
-                    GoogleDriveSync.initGapi();
-                }
+                const initAndRestore = async () => {
+                    if (credentialsConfigured && typeof gapi !== 'undefined') {
+                        await GoogleDriveSync.initGapi();
+
+                        // Try to restore token from localStorage
+                        const restored = await GoogleDriveSync.restoreToken();
+                        if (restored) {
+                            setIsSignedIn(true);
+                            console.log('Auto-signed in with saved token');
+                        }
+                    }
+                };
+                initAndRestore();
             }, []);
 
             const handleSignIn = () => {
