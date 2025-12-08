@@ -1359,11 +1359,21 @@
                     return;
                 }
 
-                GoogleDriveSync.requestAccessToken((response) => {
+                GoogleDriveSync.requestAccessToken(async (response) => {
                     if (response.success) {
                         setIsSignedIn(true);
                         setSyncStatus('Signed in successfully!');
-                        setTimeout(() => setSyncStatus(''), 3000);
+
+                        // Search for existing backup file after sign-in
+                        console.log('Checking for existing backup after sign-in...');
+                        await GoogleDriveSync.searchForExistingFile();
+
+                        // Trigger re-render to update backup status
+                        setTimeout(() => {
+                            setSyncStatus('');
+                            // Force re-render by updating a state
+                            setLastSynced(localStorage.getItem('last_synced') || null);
+                        }, 2000);
                     } else {
                         setSyncStatus('Sign-in failed: ' + response.error);
                     }
