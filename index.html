@@ -177,12 +177,12 @@
 
         // --- Google Drive Sync Manager ---
         const GoogleDriveSync = {
-            accessToken: localStorage.getItem('gdrive_access_token') || null,
+            accessToken: null,
             tokenClient: null,
             gapiInitialized: false,
             gisInitialized: false,
-            fileId: localStorage.getItem('gdrive_file_id') || null,
-            tokenExpiry: localStorage.getItem('gdrive_token_expiry') || null,
+            fileId: null, // Don't rely on localStorage, always search
+            tokenExpiry: null,
 
             // Initialize Google API client
             initGapi: function () {
@@ -339,7 +339,6 @@
                     if (response.result.files && response.result.files.length > 0) {
                         const fileId = response.result.files[0].id;
                         this.fileId = fileId;
-                        localStorage.setItem('gdrive_file_id', fileId);
                         console.log('✅ Found existing budget-data.json with ID:', fileId);
                         return fileId;
                     }
@@ -375,10 +374,9 @@
                     throw new Error('Not signed in');
                 }
 
-                // First, search for existing file if we don't have a file ID
-                if (!this.fileId) {
-                    await this.searchForExistingFile();
-                }
+                // ALWAYS search for existing file first to avoid duplicates
+                console.log('Checking for existing backup file...');
+                await this.searchForExistingFile();
 
                 const budgetData = this.getBudgetData();
                 const content = JSON.stringify(budgetData, null, 2);
@@ -397,9 +395,8 @@
                         } catch (updateError) {
                             // If file not found (404), clear the ID and create a new file
                             if (updateError.status === 404) {
-                                console.warn('Stored file ID is invalid (404), clearing and creating new file...');
+                                console.warn('Stored file ID is invalid (404), searching for existing file...');
                                 this.fileId = null;
-                                localStorage.removeItem('gdrive_file_id');
                                 // Search for existing file first
                                 await this.searchForExistingFile();
                                 // If still no file ID, fall through to create new file
@@ -440,7 +437,6 @@
 
                         const result = await response.json();
                         this.fileId = result.id;
-                        localStorage.setItem('gdrive_file_id', result.id);
                         console.log('✅ Created new file with ID:', result.id);
                         return { success: true, fileId: result.id, action: 'created' };
                     }
