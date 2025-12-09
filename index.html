@@ -220,6 +220,12 @@
             const [splitMethod, setSplitMethod] = useState('equal'); // 'equal' or 'custom'
             const [customSplits, setCustomSplits] = useState({});
 
+            // Date field - default to today
+            const [expenseDate, setExpenseDate] = useState(() => {
+                const today = new Date();
+                return today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            });
+
             // All groups now support split methods (removed pooled vs split distinction)
 
             useEffect(() => {
@@ -272,7 +278,7 @@
                     splitWith,
                     type: expenseType,
                     group: expenseType === 'group' ? selectedGroup : null,
-                    date: new Date().toISOString()
+                    date: new Date(expenseDate + 'T00:00:00').toISOString() // Use selected date
                 };
 
                 if (expenseType === 'group') {
@@ -322,6 +328,16 @@
                             placeholder="0.00"
                             className="w-full glass-input rounded-xl p-3 text-lg font-semibold"
                             autoFocus
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm text-gray-400 mb-1">Date</label>
+                        <input
+                            type="date"
+                            value={expenseDate}
+                            onChange={(e) => setExpenseDate(e.target.value)}
+                            className="w-full glass-input rounded-xl p-3"
                         />
                     </div>
 
@@ -479,6 +495,12 @@
             const [splitMethod, setSplitMethod] = useState(expense.splitMethod || 'equal');
             const [customSplits, setCustomSplits] = useState(expense.customSplits || {});
 
+            // Date field - initialize from existing expense
+            const [expenseDate, setExpenseDate] = useState(() => {
+                const date = new Date(expense.date);
+                return date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            });
+
             useEffect(() => {
                 if (expenseType === 'group' && selectedGroup && groups[selectedGroup]) {
                     // Don't override splitWith if it's already set from the expense
@@ -538,6 +560,7 @@
                     groupName: expenseType === 'group' ? selectedGroup : undefined,
                     splitMethod: expenseType === 'group' ? splitMethod : undefined,
                     customSplits: splitMethod === 'custom' ? customSplits : undefined,
+                    date: new Date(expenseDate + 'T00:00:00').toISOString() // Use selected date
                 };
 
                 onSave(updatedExpense);
@@ -580,6 +603,16 @@
                                 ))}
                             </select>
                         </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm text-gray-400 mb-1">Date</label>
+                        <input
+                            type="date"
+                            value={expenseDate}
+                            onChange={(e) => setExpenseDate(e.target.value)}
+                            className="w-full glass-input rounded-xl p-3 border-2 border-orange-500/20"
+                        />
                     </div>
 
                     <div>
