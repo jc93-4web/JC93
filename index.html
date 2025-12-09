@@ -494,13 +494,13 @@
                             <div className="bg-slate-800 rounded-2xl p-4 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
                                 <h3 className="text-lg font-semibold mb-3 text-center">Select Date</h3>
 
-                                {/* Week Navigator */}
+                                {/* Month Navigator */}
                                 <div className="flex items-center justify-between mb-3">
                                     <button
                                         type="button"
                                         onClick={() => {
                                             const current = new Date(expenseDate);
-                                            current.setDate(current.getDate() - 7);
+                                            current.setMonth(current.getMonth() - 1);
                                             setExpenseDate(current.toISOString().split('T')[0]);
                                         }}
                                         className="p-2 hover:bg-white/10 rounded-lg"
@@ -514,7 +514,7 @@
                                         type="button"
                                         onClick={() => {
                                             const current = new Date(expenseDate);
-                                            current.setDate(current.getDate() + 7);
+                                            current.setMonth(current.getMonth() + 1);
                                             setExpenseDate(current.toISOString().split('T')[0]);
                                         }}
                                         className="p-2 hover:bg-white/10 rounded-lg"
@@ -523,20 +523,48 @@
                                     </button>
                                 </div>
 
-                                {/* Week View */}
+                                {/* Month View */}
                                 <div className="grid grid-cols-7 gap-1 mb-3">
                                     {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
                                         <div key={i} className="text-center text-xs text-gray-400 py-1">{day}</div>
                                     ))}
                                     {(() => {
                                         const selected = new Date(expenseDate);
-                                        const startOfWeek = new Date(selected);
-                                        startOfWeek.setDate(selected.getDate() - selected.getDay());
+                                        const year = selected.getFullYear();
+                                        const month = selected.getMonth();
+
+                                        // First day of the month
+                                        const firstDay = new Date(year, month, 1);
+                                        const startDay = firstDay.getDay(); // 0 = Sunday
+
+                                        // Last day of the month
+                                        const lastDay = new Date(year, month + 1, 0);
+                                        const daysInMonth = lastDay.getDate();
 
                                         const days = [];
-                                        for (let i = 0; i < 14; i++) {
-                                            const day = new Date(startOfWeek);
-                                            day.setDate(startOfWeek.getDate() + i);
+
+                                        // Previous month's days to fill the first week
+                                        const prevMonthLastDay = new Date(year, month, 0).getDate();
+                                        for (let i = startDay - 1; i >= 0; i--) {
+                                            const day = new Date(year, month - 1, prevMonthLastDay - i);
+                                            days.push(
+                                                <button
+                                                    key={`prev-${i}`}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setExpenseDate(day.toISOString().split('T')[0]);
+                                                        setShowDatePicker(false);
+                                                    }}
+                                                    className="aspect-square rounded-lg text-sm flex items-center justify-center font-medium text-gray-600 hover:bg-white/5"
+                                                >
+                                                    {day.getDate()}
+                                                </button>
+                                            );
+                                        }
+
+                                        // Current month's days
+                                        for (let i = 1; i <= daysInMonth; i++) {
+                                            const day = new Date(year, month, i);
                                             const isSelected = day.toISOString().split('T')[0] === expenseDate;
                                             const isToday = day.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
 
@@ -551,10 +579,30 @@
                                                     className={`aspect-square rounded-lg text-sm flex items-center justify-center font-medium transition-colors
                                                         ${isSelected ? 'bg-indigo-500 text-white' : isToday ? 'bg-white/10 text-indigo-300' : 'hover:bg-white/5'}`}
                                                 >
-                                                    {day.getDate()}
+                                                    {i}
                                                 </button>
                                             );
                                         }
+
+                                        // Next month's days to fill the grid (up to 42 days total for 6 weeks)
+                                        const remainingDays = 42 - days.length;
+                                        for (let i = 1; i <= remainingDays; i++) {
+                                            const day = new Date(year, month + 1, i);
+                                            days.push(
+                                                <button
+                                                    key={`next-${i}`}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setExpenseDate(day.toISOString().split('T')[0]);
+                                                        setShowDatePicker(false);
+                                                    }}
+                                                    className="aspect-square rounded-lg text-sm flex items-center justify-center font-medium text-gray-600 hover:bg-white/5"
+                                                >
+                                                    {i}
+                                                </button>
+                                            );
+                                        }
+
                                         return days;
                                     })()}
                                 </div>
@@ -876,13 +924,13 @@
                             <div className="bg-slate-800 rounded-2xl p-4 max-w-sm w-full border-2 border-orange-500/30" onClick={(e) => e.stopPropagation()}>
                                 <h3 className="text-lg font-semibold mb-3 text-center text-orange-400">Select Date</h3>
 
-                                {/* Week Navigator */}
+                                {/* Month Navigator */}
                                 <div className="flex items-center justify-between mb-3">
                                     <button
                                         type="button"
                                         onClick={() => {
                                             const current = new Date(expenseDate);
-                                            current.setDate(current.getDate() - 7);
+                                            current.setMonth(current.getMonth() - 1);
                                             setExpenseDate(current.toISOString().split('T')[0]);
                                         }}
                                         className="p-2 hover:bg-orange-500/10 rounded-lg"
@@ -896,7 +944,7 @@
                                         type="button"
                                         onClick={() => {
                                             const current = new Date(expenseDate);
-                                            current.setDate(current.getDate() + 7);
+                                            current.setMonth(current.getMonth() + 1);
                                             setExpenseDate(current.toISOString().split('T')[0]);
                                         }}
                                         className="p-2 hover:bg-orange-500/10 rounded-lg"
@@ -905,20 +953,48 @@
                                     </button>
                                 </div>
 
-                                {/* Week View */}
+                                {/* Month View */}
                                 <div className="grid grid-cols-7 gap-1 mb-3">
                                     {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
                                         <div key={i} className="text-center text-xs text-gray-400 py-1">{day}</div>
                                     ))}
                                     {(() => {
                                         const selected = new Date(expenseDate);
-                                        const startOfWeek = new Date(selected);
-                                        startOfWeek.setDate(selected.getDate() - selected.getDay());
+                                        const year = selected.getFullYear();
+                                        const month = selected.getMonth();
+
+                                        // First day of the month
+                                        const firstDay = new Date(year, month, 1);
+                                        const startDay = firstDay.getDay(); // 0 = Sunday
+
+                                        // Last day of the month
+                                        const lastDay = new Date(year, month + 1, 0);
+                                        const daysInMonth = lastDay.getDate();
 
                                         const days = [];
-                                        for (let i = 0; i < 14; i++) {
-                                            const day = new Date(startOfWeek);
-                                            day.setDate(startOfWeek.getDate() + i);
+
+                                        // Previous month's days to fill the first week
+                                        const prevMonthLastDay = new Date(year, month, 0).getDate();
+                                        for (let i = startDay - 1; i >= 0; i--) {
+                                            const day = new Date(year, month - 1, prevMonthLastDay - i);
+                                            days.push(
+                                                <button
+                                                    key={`prev-${i}`}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setExpenseDate(day.toISOString().split('T')[0]);
+                                                        setShowDatePicker(false);
+                                                    }}
+                                                    className="aspect-square rounded-lg text-sm flex items-center justify-center font-medium text-gray-600 hover:bg-white/5"
+                                                >
+                                                    {day.getDate()}
+                                                </button>
+                                            );
+                                        }
+
+                                        // Current month's days
+                                        for (let i = 1; i <= daysInMonth; i++) {
+                                            const day = new Date(year, month, i);
                                             const isSelected = day.toISOString().split('T')[0] === expenseDate;
                                             const isToday = day.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
 
@@ -933,10 +1009,30 @@
                                                     className={`aspect-square rounded-lg text-sm flex items-center justify-center font-medium transition-colors
                                                         ${isSelected ? 'bg-orange-500 text-white' : isToday ? 'bg-white/10 text-orange-300' : 'hover:bg-white/5'}`}
                                                 >
-                                                    {day.getDate()}
+                                                    {i}
                                                 </button>
                                             );
                                         }
+
+                                        // Next month's days to fill the grid (up to 42 days total for 6 weeks)
+                                        const remainingDays = 42 - days.length;
+                                        for (let i = 1; i <= remainingDays; i++) {
+                                            const day = new Date(year, month + 1, i);
+                                            days.push(
+                                                <button
+                                                    key={`next-${i}`}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setExpenseDate(day.toISOString().split('T')[0]);
+                                                        setShowDatePicker(false);
+                                                    }}
+                                                    className="aspect-square rounded-lg text-sm flex items-center justify-center font-medium text-gray-600 hover:bg-white/5"
+                                                >
+                                                    {i}
+                                                </button>
+                                            );
+                                        }
+
                                         return days;
                                     })()}
                                 </div>
@@ -2238,100 +2334,4 @@
                                         const isToday = day.toDateString() === new Date().toDateString();
                                         const isSelected = selectedDate?.toDateString() === dateStr;
 
-                                        return (
-                                            <button
-                                                key={dateStr}
-                                                onClick={() => isCurrentMonth && setSelectedDate(selectedDate?.toDateString() === dateStr ? null : day)}
-                                                className={`p-1.5 rounded transition-all ${getColorClass(amount)} ${!isCurrentMonth ? 'opacity-30' : ''} ${isToday ? 'ring-1 ring-purple-500' : ''} ${isSelected ? 'ring-1 ring-indigo-400' : ''} hover:scale-105`}
-                                                disabled={!isCurrentMonth}
-                                            >
-                                                <div className="text-[10px] font-semibold">{day.getDate()}</div>
-                                                <div className="text-[8px] font-medium">
-                                                    {amount > 0 ? `$${amount.toFixed(2)}` : ''}
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-                    </Card>
-
-                    {/* Expense List */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold px-1">
-                            {selectedDate ? `Expenses on ${selectedDate.toLocaleDateString()}` : 'All Expenses'}
-                        </h3>
-
-                        {selectedDate ? (
-                            /* Single day expenses */
-                            filteredExpenses.length > 0 ? (
-                                <Card>
-                                    {filteredExpenses.map(expense => (
-                                        <ExpenseItem key={expense.id} expense={expense} onDelete={handleDeleteExpense} onEdit={handleEditExpense} />
-                                    ))}
-                                </Card>
-                            ) : (
-                                <Card>
-                                    <p className="text-center text-gray-400 py-8">No expenses on this day</p>
-                                </Card>
-                            )
-                        ) : (
-                            /* Grouped by date */
-                            filteredExpenses.map(([date, dayExpenses]) => (
-                                <div key={date}>
-                                    <div className="text-sm text-gray-400 mb-2 px-1">{date}</div>
-                                    <Card>
-                                        {dayExpenses.map(expense => (
-                                            <ExpenseItem key={expense.id} expense={expense} onDelete={handleDeleteExpense} onEdit={handleEditExpense} />
-                                        ))}
-                                    </Card>
-                                </div>
-                            ))
-                        )}
-
-                        {expenses.length === 0 && (
-                            <Card>
-                                <p className="text-center text-gray-400 py-8">No expenses yet</p>
-                            </Card>
-                        )}
-                    </div>
-                </div>
-            );
-        };
-
-        const BottomNav = ({ activeTab, setActiveTab }) => (
-            <div className="fixed bottom-0 left-0 right-0 bg-[#0f172a]/90 backdrop-blur-xl border-t border-white/10 p-2 pb-6 z-40">
-                <div className="max-w-md mx-auto flex justify-around">
-                    <button
-                        onClick={() => setActiveTab('home')}
-                        className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${activeTab === 'home' ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-300'}`}
-                    >
-                        <Icons.Home />
-                        <span className="text-[10px] font-medium">Home</span>
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('activity')}
-                        className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${activeTab === 'activity' ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-300'}`}
-                    >
-                        <Icons.Wallet />
-                        <span className="text-[10px] font-medium">Activity</span>
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('settings')}
-                        className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${activeTab === 'settings' ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-300'}`}
-                    >
-                        <Icons.Settings />
-                        <span className="text-[10px] font-medium">Budget</span>
-                    </button>
-                </div>
-            </div>
-        );
-
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-
-</html>
+       
