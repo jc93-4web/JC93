@@ -2334,4 +2334,100 @@
                                         const isToday = day.toDateString() === new Date().toDateString();
                                         const isSelected = selectedDate?.toDateString() === dateStr;
 
-       
+                                        return (
+                                            <button
+                                                key={dateStr}
+                                                onClick={() => isCurrentMonth && setSelectedDate(selectedDate?.toDateString() === dateStr ? null : day)}
+                                                className={`p-1.5 rounded transition-all ${getColorClass(amount)} ${!isCurrentMonth ? 'opacity-30' : ''} ${isToday ? 'ring-1 ring-purple-500' : ''} ${isSelected ? 'ring-1 ring-indigo-400' : ''} hover:scale-105`}
+                                                disabled={!isCurrentMonth}
+                                            >
+                                                <div className="text-[10px] font-semibold">{day.getDate()}</div>
+                                                <div className="text-[8px] font-medium">
+                                                    {amount > 0 ? `$${amount.toFixed(2)}` : ''}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+                    </Card>
+
+                    {/* Expense List */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold px-1">
+                            {selectedDate ? `Expenses on ${selectedDate.toLocaleDateString()}` : 'All Expenses'}
+                        </h3>
+
+                        {selectedDate ? (
+                            /* Single day expenses */
+                            filteredExpenses.length > 0 ? (
+                                <Card>
+                                    {filteredExpenses.map(expense => (
+                                        <ExpenseItem key={expense.id} expense={expense} onDelete={handleDeleteExpense} onEdit={handleEditExpense} />
+                                    ))}
+                                </Card>
+                            ) : (
+                                <Card>
+                                    <p className="text-center text-gray-400 py-8">No expenses on this day</p>
+                                </Card>
+                            )
+                        ) : (
+                            /* Grouped by date */
+                            filteredExpenses.map(([date, dayExpenses]) => (
+                                <div key={date}>
+                                    <div className="text-sm text-gray-400 mb-2 px-1">{date}</div>
+                                    <Card>
+                                        {dayExpenses.map(expense => (
+                                            <ExpenseItem key={expense.id} expense={expense} onDelete={handleDeleteExpense} onEdit={handleEditExpense} />
+                                        ))}
+                                    </Card>
+                                </div>
+                            ))
+                        )}
+
+                        {expenses.length === 0 && (
+                            <Card>
+                                <p className="text-center text-gray-400 py-8">No expenses yet</p>
+                            </Card>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const BottomNav = ({ activeTab, setActiveTab }) => (
+            <div className="fixed bottom-0 left-0 right-0 bg-[#0f172a]/90 backdrop-blur-xl border-t border-white/10 p-2 pb-6 z-40">
+                <div className="max-w-md mx-auto flex justify-around">
+                    <button
+                        onClick={() => setActiveTab('home')}
+                        className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${activeTab === 'home' ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-300'}`}
+                    >
+                        <Icons.Home />
+                        <span className="text-[10px] font-medium">Home</span>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('activity')}
+                        className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${activeTab === 'activity' ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-300'}`}
+                    >
+                        <Icons.Wallet />
+                        <span className="text-[10px] font-medium">Activity</span>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('settings')}
+                        className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${activeTab === 'settings' ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-300'}`}
+                    >
+                        <Icons.Settings />
+                        <span className="text-[10px] font-medium">Budget</span>
+                    </button>
+                </div>
+            </div>
+        );
+
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
