@@ -157,12 +157,12 @@
             Edit: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>,
         };
 
-        const CATEGORIES = [
-            { id: 'food', label: 'Food', icon: Icons.Utensils, color: 'bg-orange-500' },
-            { id: 'transport', label: 'Transport', icon: Icons.Car, color: 'bg-blue-500' },
-            { id: 'accommodation', label: 'Stay', icon: Icons.Home, color: 'bg-purple-500' },
-            { id: 'shopping', label: 'Shopping', icon: Icons.ShoppingBag, color: 'bg-pink-500' },
-            { id: 'other', label: 'Other', icon: Icons.MoreHorizontal, color: 'bg-gray-500' },
+        const DEFAULT_CATEGORIES = [
+            { id: 'food', label: 'Food', icon: 'Utensils', color: 'bg-orange-500' },
+            { id: 'transport', label: 'Transport', icon: 'Car', color: 'bg-blue-500' },
+            { id: 'accommodation', label: 'Stay', icon: 'Home', color: 'bg-purple-500' },
+            { id: 'shopping', label: 'Shopping', icon: 'ShoppingBag', color: 'bg-pink-500' },
+            { id: 'other', label: 'Other', icon: 'MoreHorizontal', color: 'bg-gray-500' },
         ];
 
         // --- React Components ---
@@ -209,10 +209,10 @@
             );
         };
 
-        const AddExpenseForm = ({ onAdd, onCancel, personalMembers, groups }) => {
+        const AddExpenseForm = ({ onAdd, onCancel, personalMembers, groups, categories }) => {
             const [amount, setAmount] = useState('');
             const [note, setNote] = useState('');
-            const [category, setCategory] = useState(CATEGORIES[0].id);
+            const [category, setCategory] = useState(categories && categories.length > 0 ? categories[0].id : 'other');
             const [expenseType, setExpenseType] = useState('personal');
             const [paidBy, setPaidBy] = useState(personalMembers[0]);
             const [splitWith, setSplitWith] = useState(personalMembers);
@@ -326,7 +326,7 @@
                             pattern="[0-9]*"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
-                            placeholder="0.00"
+                            placeholder={`$0.00`}
                             className="w-full glass-input rounded-xl p-3 text-lg font-semibold"
                             autoFocus
                         />
@@ -352,19 +352,22 @@
                     <div>
                         <label className="block text-sm text-gray-400 mb-1">Category</label>
                         <div className="grid grid-cols-5 gap-2">
-                            {CATEGORIES.map(cat => (
-                                <button
-                                    key={cat.id}
-                                    type="button"
-                                    onClick={() => setCategory(cat.id)}
-                                    className={`p-2 rounded-xl flex flex-col items-center gap-1 transition-all ${category === cat.id ? 'bg-white/20 ring-2 ring-purple-500' : 'bg-white/5 hover:bg-white/10'}`}
-                                >
-                                    <div className={`p-1.5 rounded-full ${cat.color}`}>
-                                        <cat.icon />
-                                    </div>
-                                    <span className="text-[10px] opacity-80">{cat.label}</span>
-                                </button>
-                            ))}
+                            {(categories || []).map(cat => {
+                                const Icon = Icons[cat.icon] || Icons.MoreHorizontal;
+                                return (
+                                    <button
+                                        key={cat.id}
+                                        type="button"
+                                        onClick={() => setCategory(cat.id)}
+                                        className={`p-2 rounded-xl flex flex-col items-center gap-1 transition-all ${category === cat.id ? 'bg-white/20 ring-2 ring-purple-500' : 'bg-white/5 hover:bg-white/10'}`}
+                                    >
+                                        <div className={`p-1.5 rounded-full ${cat.color}`}>
+                                            <Icon />
+                                        </div>
+                                        <span className="text-[10px] opacity-80">{cat.label}</span>
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -426,7 +429,7 @@
                                                         pattern="[0-9]*"
                                                         value={customSplits[person] || ''}
                                                         onChange={(e) => handleCustomSplitChange(person, e.target.value)}
-                                                        placeholder="0.00"
+                                                        placeholder={`$0.00`}
                                                         className="w-24 glass-input rounded-lg p-2 text-sm"
                                                     />
                                                 </div>
@@ -635,7 +638,7 @@
         };
 
         // Edit Expense Form - Orange theme to distinguish from Add
-        const EditExpenseForm = ({ expense, onSave, onCancel, personalMembers, groups }) => {
+        const EditExpenseForm = ({ expense, onSave, onCancel, personalMembers, groups, categories }) => {
             const [amount, setAmount] = useState(expense.amount.toString());
             const [note, setNote] = useState(expense.note || '');
             const [category, setCategory] = useState(expense.category);
@@ -737,7 +740,7 @@
                                 pattern="[0-9]*"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
-                                placeholder="0.00"
+                                placeholder={`$0.00`}
                                 step="0.01"
                                 className="w-full glass-input rounded-xl p-3 text-2xl font-bold border-2 border-orange-500/30 focus:border-orange-500"
                                 required
@@ -750,7 +753,7 @@
                                 onChange={(e) => setCategory(e.target.value)}
                                 className="w-full glass-input rounded-xl p-3 appearance-none border-2 border-orange-500/20"
                             >
-                                {CATEGORIES.map(cat => (
+                                {categories && categories.map(cat => (
                                     <option key={cat.id} value={cat.id}>{cat.label}</option>
                                 ))}
                             </select>
@@ -867,7 +870,7 @@
                                                         pattern="[0-9]*"
                                                         value={customSplits[person] || ''}
                                                         onChange={(e) => handleCustomSplitChange(person, e.target.value)}
-                                                        placeholder="0.00"
+                                                        placeholder={`$0.00`}
                                                         className="w-24 glass-input rounded-lg p-2 text-sm border border-orange-500/30"
                                                     />
                                                 </div>
@@ -1216,15 +1219,17 @@
             );
         };
 
-        const ExpenseItem = ({ expense, onDelete, onEdit }) => {
-            const cat = CATEGORIES.find(c => c.id === expense.category) || CATEGORIES[4];
+        const ExpenseItem = ({ expense, onDelete, onEdit, categories }) => {
+            const safeCategories = categories || [];
+            const cat = safeCategories.find(c => c.id === expense.category) || safeCategories[safeCategories.length - 1] || { icon: 'MoreHorizontal', color: 'bg-gray-500', label: 'Other' };
+            const Icon = Icons[cat.icon] || Icons.MoreHorizontal;
             const date = new Date(expense.date);
 
             return (
                 <div className="group flex items-center justify-between p-3 hover:bg-white/5 rounded-xl transition-colors">
                     <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-full ${cat.color} bg-opacity-20 text-white`}>
-                            <cat.icon />
+                            <Icon />
                         </div>
                         <div>
                             <div className="font-medium text-white">{expense.note || cat.label}</div>
@@ -1259,7 +1264,7 @@
 
         // Personal Balances - Only for personal expenses
         const PersonalBalances = ({ personalMembers, expenses }) => {
-            const balances = useMemo(() => {
+            const balances = React.useMemo(() => {
                 const bals = {};
                 personalMembers.forEach(t => bals[t] = 0);
 
@@ -1294,7 +1299,7 @@
                             <div key={name} className="glass-panel p-3 rounded-xl flex justify-between items-center">
                                 <span className="font-medium text-sm">{name}</span>
                                 <span className={`font-bold ${amount >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                    {amount >= 0 ? '+' : ''}{amount.toFixed(2)}
+                                    {amount >= 0 ? '+' : ''}${amount.toFixed(2)}
                                 </span>
                             </div>
                         ))}
@@ -1305,7 +1310,7 @@
 
         // Group Balances - Shows remaining budget per member in groups
         const GroupBalances = ({ groups, expenses }) => {
-            const balances = useMemo(() => {
+            const balances = React.useMemo(() => {
                 const memberBalances = {};
 
                 // Initialize all group members with their budgets
@@ -1370,7 +1375,7 @@
         };
 
         const TravelerBudgets = ({ personalMembers, budgets, expenses, groups }) => {
-            const stats = useMemo(() => {
+            const stats = React.useMemo(() => {
                 const data = {};
                 personalMembers.forEach(t => {
                     data[t] = {
@@ -1433,7 +1438,7 @@
                                     <div className="flex justify-between items-center text-xs pt-2 border-t border-white/10">
                                         <span className="text-gray-400">Balance:</span>
                                         <span className={`font-semibold ${balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                            {balance >= 0 ? '+' : ''}{balance.toFixed(2)}
+                                            {balance >= 0 ? '+' : ''}${balance.toFixed(2)}
                                         </span>
                                     </div>
                                 )}
@@ -1454,116 +1459,14 @@
             expenses,
             isAdding,
             setIsAdding,
-            handleAddExpense
+            handleAddExpense,
+            categories
         }) => {
             // State for collapsible total overview
-            const [isTotalExpanded, setIsTotalExpanded] = React.useState(false);
 
-            // Calculate Personal and Group totals separately
-            const personalTotal = useMemo(() => {
-                let budget = 0;
-                let spent = 0;
-
-                personalMembers.forEach(member => {
-                    budget += budgets[member] || 0;
-                });
-
-                expenses.forEach(e => {
-                    if (e.type === 'personal') {
-                        spent += e.amount;
-                    }
-                });
-
-                return { budget, spent, remaining: budget - spent };
-            }, [personalMembers, budgets, expenses]);
-
-            const groupTotal = useMemo(() => {
-                let budget = 0;
-                let spent = 0;
-
-                Object.values(groups).forEach(group => {
-                    if (group.memberBudgets) {
-                        Object.values(group.memberBudgets).forEach(b => {
-                            budget += b || 0;
-                        });
-                    }
-                });
-
-                expenses.forEach(e => {
-                    if (e.type === 'group') {
-                        spent += e.amount;
-                    }
-                });
-
-                return { budget, spent, remaining: budget - spent };
-            }, [groups, expenses]);
-
-            const combinedTotal = personalTotal.budget + groupTotal.budget;
-            const combinedSpent = personalTotal.spent + groupTotal.spent;
-            const combinedRemaining = personalTotal.remaining + groupTotal.remaining;
-            const combinedPct = combinedTotal > 0 ? (combinedSpent / combinedTotal) * 100 : 0;
 
             return (
                 <div className="animate-fade-in pb-24">
-                    {/* Collapsible Total Overview */}
-                    <div className="glass-panel rounded-xl overflow-hidden mb-6">
-                        <button
-                            onClick={() => setIsTotalExpanded(!isTotalExpanded)}
-                            className="w-full p-4 text-left hover:bg-white/5 transition-colors"
-                        >
-                            <div className="flex justify-between items-center mb-2">
-                                <div className="flex items-center gap-2">
-                                    <h2 className="text-xl font-bold text-white">Total Remaining</h2>
-                                    <span className="text-gray-400 text-sm">{isTotalExpanded ? '▲' : '▼'}</span>
-                                </div>
-                                <div className="text-2xl font-bold text-white">
-                                    ${combinedRemaining.toFixed(2)}
-                                </div>
-                            </div>
-                            <div className="h-3 w-full bg-gray-700/50 rounded-full overflow-hidden">
-                                <div
-                                    className={`h-full transition-all duration-500 ${combinedPct > 90 ? 'bg-red-500' : combinedPct > 75 ? 'bg-yellow-500' : 'bg-emerald-500'
-                                        }`}
-                                    style={{ width: `${Math.min(combinedPct, 100)}%` }}
-                                />
-                            </div>
-                        </button>
-
-                        {/* Expanded Breakdown */}
-                        {isTotalExpanded && (
-                            <div className="px-4 pb-4 pt-2 border-t border-white/10 space-y-3">
-                                {/* Personal Total */}
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-300">Personal:</span>
-                                    <span className="text-gray-100 font-medium">
-                                        ${personalTotal.spent.toFixed(2)} / ${personalTotal.budget.toFixed(2)}
-                                        <span className={`ml-2 ${personalTotal.remaining < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
-                                            (${personalTotal.remaining.toFixed(2)})
-                                        </span>
-                                    </span>
-                                </div>
-
-                                {/* Groups Total */}
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-300">Groups:</span>
-                                    <span className="text-gray-100 font-medium">
-                                        ${groupTotal.spent.toFixed(2)} / ${groupTotal.budget.toFixed(2)}
-                                        <span className={`ml-2 ${groupTotal.remaining < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
-                                            (${groupTotal.remaining.toFixed(2)})
-                                        </span>
-                                    </span>
-                                </div>
-
-                                {/* Combined Total */}
-                                <div className="flex justify-between text-sm pt-2 border-t border-white/10">
-                                    <span className="text-gray-200 font-medium">Total:</span>
-                                    <span className="text-white font-bold">
-                                        ${combinedSpent.toFixed(2)} / ${combinedTotal.toFixed(2)}
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
                     {/* Group Budgets */}
                     <GroupBudgets groups={groups} expenses={expenses} />
 
@@ -1589,6 +1492,7 @@
                                 onCancel={() => setIsAdding(false)}
                                 personalMembers={personalMembers}
                                 groups={groups}
+                                categories={categories}
                             />
                         </Card>
                     )}
@@ -1600,20 +1504,72 @@
         // SUBSCRIPTION COMPONENTS
         // =================================
 
-        const getNextDueDate = (day) => {
-            const today = new Date();
-            const currentMonthDue = new Date(today.getFullYear(), today.getMonth(), day);
-
-            // If the day for this month has passed or is today, check strict inequality? 
-            // "Due Soon" implies future. If due today, it's due.
-            // If today is 15th, and due date is 15th. It is due today.
-            // If today is 16th, and due date is 15th. It is due next month.
-
-            if (today.getDate() > day) {
-                return new Date(today.getFullYear(), today.getMonth() + 1, day);
-            }
-            return currentMonthDue;
+        const FREQUENCIES = {
+            weekly: { label: 'Weekly', days: 7 },
+            biweekly: { label: 'Bi-Weekly', days: 14 },
+            triweekly: { label: 'Every 3 Weeks', days: 21 },
+            fourweekly: { label: 'Every 4 Weeks', days: 28 },
+            monthly: { label: 'Monthly', months: 1 },
+            quarterly: { label: 'Seasonally (3 Mo)', months: 3 },
+            semiannually: { label: 'Semi-Annually (6 Mo)', months: 6 },
+            yearly: { label: 'Yearly', months: 12 }
         };
+
+        // Improved date calculator
+        const getNextDueDate = (subscription) => {
+            // Legacy support
+            if (!subscription.startDate && subscription.billingDate) {
+                const t = new Date();
+                t.setHours(0, 0, 0, 0);
+                let target = new Date(t.getFullYear(), t.getMonth(), subscription.billingDate);
+                if (target < t) {
+                    target.setMonth(target.getMonth() + 1);
+                }
+                return target;
+            }
+
+            // Check if expired
+            if (subscription.endDate) {
+                const end = new Date(subscription.endDate);
+                const lastPaid = subscription.lastPaidDate ? new Date(subscription.lastPaidDate) : null;
+
+                // If the last payment was on or after the end date, it's done. 
+                // But simplified: if today is past end date, it's inactive/expired? 
+                // Let's calculate next candidate and see if it falls after end date.
+            }
+
+            const start = new Date(subscription.startDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // If never paid, the first due date is the start date
+            let nextDue = new Date(subscription.lastPaidDate || subscription.startDate);
+
+            // If we have paid before, calculate the NEXT cycle after the last paid date
+            if (subscription.lastPaidDate) {
+                // Clone to avoid mutation issues if any
+                nextDue = new Date(subscription.lastPaidDate);
+
+                if (subscription.frequency === 'weekly') nextDue.setDate(nextDue.getDate() + 7);
+                else if (subscription.frequency === 'biweekly') nextDue.setDate(nextDue.getDate() + 14);
+                else if (subscription.frequency === 'triweekly') nextDue.setDate(nextDue.getDate() + 21);
+                else if (subscription.frequency === 'fourweekly') nextDue.setDate(nextDue.getDate() + 28);
+                else if (subscription.frequency === 'monthly') nextDue.setMonth(nextDue.getMonth() + 1);
+                else if (subscription.frequency === 'quarterly') nextDue.setMonth(nextDue.getMonth() + 3);
+                else if (subscription.frequency === 'semiannually') nextDue.setMonth(nextDue.getMonth() + 6);
+                else if (subscription.frequency === 'yearly') nextDue.setFullYear(nextDue.getFullYear() + 1);
+            }
+
+            // If there is an end date, and the calculated next due date is AFTER the end date, 
+            // return a special null or past date or flag? 
+            // For UI simplicity, if it's past end date, we can return null, but that might break sort comparisons.
+            // Let's return the date, but the list renderer will handle "Expired/Finished".
+            // Actually, if nextDue > endDate, we should probably conceptually treat it as "No more payments".
+
+            return nextDue;
+        };
+
+
 
         const getDaysRemaining = (dueDate) => {
             const today = new Date();
@@ -1625,7 +1581,7 @@
             return Math.ceil(diff / (1000 * 60 * 60 * 24));
         };
 
-        const SubscriptionList = ({ subscriptions, onDelete, onEdit, onPay }) => {
+        const SubscriptionList = ({ subscriptions, onDelete, onEdit, onPay, categories }) => {
             if (!subscriptions || subscriptions.length === 0) {
                 return (
                     <Card className="text-center py-8 text-gray-400 bg-white/5">
@@ -1639,19 +1595,19 @@
 
             // Sort by next due date
             const sorted = [...subscriptions].sort((a, b) => {
-                const dateA = getNextDueDate(a.billingDate);
-                const dateB = getNextDueDate(b.billingDate);
+                const dateA = getNextDueDate(a);
+                const dateB = getNextDueDate(b);
                 return dateA - dateB;
             });
 
             return (
                 <div className="space-y-4">
                     {sorted.map(sub => {
-                        const nextDue = getNextDueDate(sub.billingDate);
+                        const nextDue = getNextDueDate(sub);
                         const daysLeft = getDaysRemaining(nextDue);
 
                         // Countdown bar logic
-                        const totalDays = 30;
+                        const totalDays = sub.frequency === 'weekly' ? 7 : sub.frequency === 'biweekly' ? 14 : 30;
                         const progress = Math.max(0, Math.min(100, ((totalDays - daysLeft) / totalDays) * 100));
 
                         let color = "bg-emerald-500";
@@ -1663,9 +1619,9 @@
                             daysTextClass = "text-red-400 font-bold";
                             statusText = "Due Today!";
                         } else if (daysLeft < 0) {
-                            // Should theoretically not happen with getNextDueDate logic, but safety check
                             color = "bg-red-500";
-                            statusText = "Overdue";
+                            daysTextClass = "text-red-400 font-bold";
+                            statusText = `Overdue (${Math.abs(daysLeft)} days)`;
                         } else if (daysLeft <= 3) {
                             color = "bg-red-500";
                             daysTextClass = "text-red-400";
@@ -1674,27 +1630,35 @@
                             daysTextClass = "text-yellow-400";
                         }
 
-                        const cat = CATEGORIES.find(c => c.id === sub.category) || CATEGORIES[4];
+                        // V3: Category Lookup
+                        const safeCategories = categories || [];
+                        const cat = safeCategories.find(c => c.id === sub.category) || safeCategories[safeCategories.length - 1] || { icon: 'MoreHorizontal', color: 'bg-gray-500' };
+                        const Icon = Icons[cat.icon] || Icons.MoreHorizontal;
+
+                        const freqLabel = FREQUENCIES[sub.frequency]?.label || sub.billingCycle;
 
                         return (
                             <Card key={sub.id} className="relative overflow-hidden group border border-white/5 hover:border-white/10 transition-all">
                                 <div className="flex justify-between items-start mb-2 relative z-10">
                                     <div className="flex items-center gap-3">
                                         <div className={`p-2 rounded-full ${cat.color} bg-opacity-20 text-white`}>
-                                            <cat.icon />
+                                            <Icon />
                                         </div>
                                         <div>
                                             <h4 className="font-bold text-lg text-white">{sub.name}</h4>
-                                            <div className="text-xs text-gray-400">
-                                                Due {nextDue.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • {sub.billingCycle}
+                                            <div className="text-xs text-gray-400 flex items-center gap-2">
+                                                <span>{freqLabel}</span>
+                                                {sub.endDate && (
+                                                    <span className="flex items-center gap-1 text-orange-400/80">
+                                                        <Icons.Calendar width={10} /> until {new Date(sub.endDate).toLocaleDateString()}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="font-bold text-xl text-white">${sub.amount.toFixed(2)}</div>
-                                        <div className={`text-xs font-bold ${daysTextClass}`}>
-                                            {statusText}
-                                        </div>
+                                        <div className="text-xl font-bold text-white">${sub.amount.toFixed(2)}</div>
+                                        <div className={`text-[10px] font-medium ${daysTextClass}`}>{statusText}</div>
                                     </div>
                                 </div>
 
@@ -1708,12 +1672,18 @@
 
                                 {/* Actions */}
                                 <div className="flex gap-2 relative z-10 opacity-80 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                        onClick={() => onPay(sub)}
-                                        className="flex-1 py-2 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 rounded-lg text-xs font-medium transition-colors border border-indigo-500/20"
-                                    >
-                                        Pay & Add Expense
-                                    </button>
+                                    {sub.autoPay ? (
+                                        <div className="flex-1 py-2 text-center text-xs text-emerald-400/70 italic">
+                                            Auto-pays when due
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => onPay(sub)}
+                                            className="flex-1 py-2 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 rounded-lg text-xs font-medium transition-colors border border-indigo-500/20"
+                                        >
+                                            Pay Now
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => onEdit(sub)}
                                         className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors border border-transparent hover:border-white/10"
@@ -1739,12 +1709,15 @@
             );
         };
 
-        const AddSubscriptionForm = ({ onAdd, onCancel }) => {
+        const AddSubscriptionForm = ({ onAdd, onCancel, categories }) => {
             const [name, setName] = useState('');
             const [amount, setAmount] = useState('');
-            const [day, setDay] = useState('1');
-            const [category, setCategory] = useState(CATEGORIES[4].id); // Default to 'Other'
-            const [cycle, setCycle] = useState('monthly');
+            const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+            const [endDate, setEndDate] = useState(''); // New State
+            const [category, setCategory] = useState(categories && categories.length > 0 ? categories[categories.length - 1].id : 'other');
+            const [frequency, setFrequency] = useState('monthly');
+            // autoPay is removed from UI, defaults to true
+
 
             const handleSubmit = (e) => {
                 e.preventDefault();
@@ -1754,9 +1727,12 @@
                     id: Date.now().toString(),
                     name,
                     amount: parseFloat(amount),
-                    billingDate: parseInt(day),
+                    startDate: startDate,
+                    endDate: endDate || null,
+                    lastPaidDate: null,
                     category,
-                    billingCycle: cycle,
+                    frequency,
+                    autoPay: true, // Always true now
                     active: true
                 });
             };
@@ -1768,7 +1744,7 @@
                         <input
                             value={name}
                             onChange={e => setName(e.target.value)}
-                            placeholder="Netflix, Spotify..."
+                            placeholder="Netflix, Rent, Gym..."
                             className="w-full glass-input rounded-xl p-3"
                             autoFocus
                             required
@@ -1783,41 +1759,74 @@
                                 inputMode="decimal"
                                 value={amount}
                                 onChange={e => setAmount(e.target.value)}
-                                placeholder="0.00"
+                                placeholder={`$0.00`}
                                 className="w-full glass-input rounded-xl p-3"
                                 required
                             />
                         </div>
                         <div>
-                            <label className="block text-sm text-gray-400 mb-1">Billing Day</label>
+                            <label className="block text-sm text-gray-400 mb-1">First Bill Date</label>
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={e => setStartDate(e.target.value)}
+                                className="w-full glass-input rounded-xl p-3 appearance-none min-h-[46px]"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm text-gray-400 mb-1">Repeat</label>
                             <select
-                                value={day}
-                                onChange={e => setDay(e.target.value)}
+                                value={frequency}
+                                onChange={e => setFrequency(e.target.value)}
                                 className="w-full glass-input rounded-xl p-3 appearance-none"
                             >
-                                {[...Array(31)].map((_, i) => (
-                                    <option key={i + 1} value={i + 1}>{i + 1} of month</option>
+                                {Object.entries(FREQUENCIES).map(([key, val]) => (
+                                    <option key={key} value={key}>{val.label}</option>
                                 ))}
                             </select>
                         </div>
+                        <div>
+                            <label className="block text-sm text-gray-400 mb-1">End Date (Optional)</label>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={e => setEndDate(e.target.value)}
+                                className="w-full glass-input rounded-xl p-3 appearance-none min-h-[46px]"
+                            />
+                        </div>
                     </div>
+
+                    <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-center">
+                        <p className="text-xs text-emerald-400">
+                            Auto-pay is enabled by default. Expenses will be created automatically.
+                        </p>
+                    </div>
+
+
 
                     <div>
                         <label className="block text-sm text-gray-400 mb-1">Category</label>
                         <div className="grid grid-cols-5 gap-2">
-                            {CATEGORIES.map(cat => (
-                                <button
-                                    key={cat.id}
-                                    type="button"
-                                    onClick={() => setCategory(cat.id)}
-                                    className={`p-2 rounded-xl flex flex-col items-center gap-1 transition-all ${category === cat.id ? 'bg-white/20 ring-2 ring-purple-500' : 'bg-white/5 hover:bg-white/10'}`}
-                                >
-                                    <div className={`p-1.5 rounded-full ${cat.color}`}>
-                                        <cat.icon />
-                                    </div>
-                                    <span className="text-[10px] opacity-80">{cat.label}</span>
-                                </button>
-                            ))}
+                            {(categories || []).map(cat => {
+                                const Icon = Icons[cat.icon] || Icons.MoreHorizontal;
+                                return (
+                                    <button
+                                        key={cat.id}
+                                        type="button"
+                                        onClick={() => setCategory(cat.id)}
+                                        className={`p-2 rounded-xl flex flex-col items-center gap-1 transition-all ${category === cat.id ? 'bg-white/20 ring-2 ring-purple-500' : 'bg-white/5 hover:bg-white/10'}`}
+                                    >
+                                        <div className={`p-1.5 rounded-full ${cat.color}`}>
+                                            <Icon />
+                                        </div>
+                                        <span className="text-[10px] opacity-80">{cat.label}</span>
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -1825,15 +1834,18 @@
                         <Button variant="secondary" className="flex-1" onClick={onCancel}>Cancel</Button>
                         <Button type="submit" className="flex-1">Add Subscription</Button>
                     </div>
-                </form>
+                </form >
             );
         };
 
-        const EditSubscriptionForm = ({ subscription, onSave, onCancel }) => {
+        const EditSubscriptionForm = ({ subscription, onSave, onCancel, categories }) => {
             const [name, setName] = useState(subscription.name);
             const [amount, setAmount] = useState(subscription.amount.toString());
-            const [day, setDay] = useState(subscription.billingDate.toString());
+            const [startDate, setStartDate] = useState(subscription.startDate || new Date().toISOString().split('T')[0]);
+            const [endDate, setEndDate] = useState(subscription.endDate || ''); // New
             const [category, setCategory] = useState(subscription.category);
+            const [frequency, setFrequency] = useState(subscription.frequency || 'monthly');
+            // autoPay defaults to true logic elsewhere
 
             const handleSubmit = (e) => {
                 e.preventDefault();
@@ -1843,8 +1855,11 @@
                     ...subscription,
                     name,
                     amount: parseFloat(amount),
-                    billingDate: parseInt(day),
-                    category
+                    startDate,
+                    endDate: endDate || null,
+                    category,
+                    frequency,
+                    autoPay: true // Always true
                 });
             };
 
@@ -1880,17 +1895,45 @@
                             />
                         </div>
                         <div>
-                            <label className="block text-sm text-gray-400 mb-1">Billing Day</label>
+                            <label className="block text-sm text-gray-400 mb-1">First Bill Date</label>
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={e => setStartDate(e.target.value)}
+                                className="w-full glass-input rounded-xl p-3 border-2 border-orange-500/20 focus:border-orange-500 appearance-none min-h-[46px]"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm text-gray-400 mb-1">Repeat</label>
                             <select
-                                value={day}
-                                onChange={e => setDay(e.target.value)}
-                                className="w-full glass-input rounded-xl p-3 appearance-none border-2 border-orange-500/20 focus:border-orange-500"
+                                value={frequency}
+                                onChange={e => setFrequency(e.target.value)}
+                                className="w-full glass-input rounded-xl p-3 border-2 border-orange-500/20 focus:border-orange-500 appearance-none"
                             >
-                                {[...Array(31)].map((_, i) => (
-                                    <option key={i + 1} value={i + 1}>{i + 1} of month</option>
+                                {Object.entries(FREQUENCIES).map(([key, val]) => (
+                                    <option key={key} value={key}>{val.label}</option>
                                 ))}
                             </select>
                         </div>
+                        <div>
+                            <label className="block text-sm text-gray-400 mb-1">End Date (Optional)</label>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={e => setEndDate(e.target.value)}
+                                className="w-full glass-input rounded-xl p-3 border-2 border-orange-500/20 focus:border-orange-500 appearance-none min-h-[46px]"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="p-3 bg-orange-500/10 rounded-xl border border-orange-500/20 text-center">
+                        <p className="text-xs text-orange-400">
+                            Auto-pay is strictly enforced.
+                        </p>
                     </div>
 
                     <div>
@@ -1900,7 +1943,7 @@
                             onChange={(e) => setCategory(e.target.value)}
                             className="w-full glass-input rounded-xl p-3 appearance-none border-2 border-orange-500/20"
                         >
-                            {CATEGORIES.map(cat => (
+                            {(categories || []).map(cat => (
                                 <option key={cat.id} value={cat.id}>{cat.label}</option>
                             ))}
                         </select>
@@ -1914,7 +1957,7 @@
             );
         };
 
-        const SubscriptionTab = ({ subscriptions, onAdd, onDelete, onEdit, onPay, isAdding, setIsAdding }) => {
+        const SubscriptionTab = ({ categories, subscriptions, onAdd, onDelete, onEdit, onPay, isAdding, setIsAdding }) => {
             const totalMonthly = subscriptions.reduce((acc, sub) => acc + sub.amount, 0);
 
             return (
@@ -1945,6 +1988,7 @@
                                     setIsAdding(false);
                                 }}
                                 onCancel={() => setIsAdding(false)}
+                                categories={categories}
                             />
                         </Card>
                     )}
@@ -1955,6 +1999,7 @@
                         onDelete={onDelete}
                         onEdit={onEdit}
                         onPay={onPay}
+                        categories={categories}
                     />
                 </div>
             );
@@ -1988,7 +2033,10 @@
             handleBudgetChange,
             addGroup,
             removeGroup,
-            handleSaveSettings
+            handleSaveSettings,
+            categories,
+            setCategories,
+            setNewCategoryName
         }) => {
             const toggleGroupMember = (person) => {
                 if (newGroupMembers.includes(person)) {
@@ -2003,6 +2051,63 @@
                     <h3 className="text-lg font-semibold text-gray-200 px-1 mb-4">Budget Settings</h3>
 
                     <div className="space-y-6">
+
+
+                        {/* Manage Categories */}
+                        <Card>
+                            <label className="text-sm text-gray-400 mb-2 block">Custom Categories</label>
+                            <div className="flex gap-2 mb-3">
+                                <input
+                                    type="text"
+                                    value={newCategoryName}
+                                    onChange={(e) => setNewCategoryName(e.target.value)}
+                                    placeholder="New Category Name"
+                                    className="flex-1 glass-input rounded-xl p-2"
+                                />
+                                <Button onClick={() => {
+                                    if (newCategoryName.trim()) {
+                                        const id = newCategoryName.toLowerCase().replace(/\s+/g, '_');
+                                        if (!categories.find(c => c.id === id)) {
+                                            setCategories([...categories, {
+                                                id,
+                                                label: newCategoryName.trim(),
+                                                icon: 'MoreHorizontal', // Default icon
+                                                color: 'bg-indigo-500' // Default color
+                                            }]);
+                                            setNewCategoryName('');
+                                        } else {
+                                            alert('Category already exists!');
+                                        }
+                                    }
+                                }} className="!p-2"><Icons.Plus /></Button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                {(categories || []).map(cat => {
+                                    const Icon = Icons[cat.icon] || Icons.MoreHorizontal;
+                                    return (
+                                        <div key={cat.id} className="flex items-center gap-2 bg-white/5 p-2 rounded-lg group">
+                                            <div className={`p-1.5 rounded-full ${cat.color} bg-opacity-20 text-white shrink-0`}>
+                                                <Icon width={14} height={14} />
+                                            </div>
+                                            <span className="text-xs text-gray-300 truncate flex-1">{cat.label}</span>
+                                            {/* Allow deleting non-defaults? For now allow all, but maybe protect defaults. */}
+                                            {/* Simple delete for now */}
+                                            <button
+                                                onClick={() => {
+                                                    if (confirm(`Delete category "${cat.label}"?`)) {
+                                                        setCategories(categories.filter(c => c.id !== cat.id));
+                                                    }
+                                                }}
+                                                className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <Icons.X width={14} />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </Card>
+
                         {/* Groups */}
                         <Card>
                             <label className="text-sm text-gray-400 mb-2 block">Group Budgets</label>
@@ -2032,7 +2137,7 @@
                                             pattern="[0-9]*"
                                             value={newMemberBudget}
                                             onChange={(e) => setNewMemberBudget(e.target.value)}
-                                            placeholder="Budget"
+                                            placeholder={`$0`}
                                             className="w-24 glass-input rounded-lg p-2 text-xs"
                                         />
                                         <button
@@ -2115,7 +2220,7 @@
                                                 pattern="[0-9]*"
                                                 value={tempBudgets[t] || ''}
                                                 onChange={(e) => handleBudgetChange(t, e.target.value)}
-                                                placeholder="Personal Budget"
+                                                placeholder={`$0`}
                                                 className="w-full glass-input rounded-lg p-1 text-sm"
                                             />
                                         </div>
@@ -2227,6 +2332,75 @@
             const [newMemberName, setNewMemberName] = useState('');
             const [newMemberBudget, setNewMemberBudget] = useState(''); // NEW: track member budgets during group creation
 
+            // V3: Custom Categories
+            const [categories, setCategories] = useState(() => {
+                const saved = localStorage.getItem('budget_categories');
+                return saved ? JSON.parse(saved) : DEFAULT_CATEGORIES;
+            });
+            const [newCategoryName, setNewCategoryName] = useState('');
+            const [newCategoryIcon, setNewCategoryIcon] = useState('MoreHorizontal'); // Default icon
+            const [isManagingCategories, setIsManagingCategories] = useState(false);
+
+
+
+            // Persistence
+            useEffect(() => {
+                // Auto-Pay Logic: Check for due subscriptions on load
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                let newExpenses = [...expenses];
+                let newSubscriptions = [...subscriptions];
+                let updated = false;
+
+                newSubscriptions = newSubscriptions.map(sub => {
+                    // Force Check for all (effectively autoPay=true)
+                    // Check if subscription has ended
+                    if (sub.endDate) {
+                        const end = new Date(sub.endDate);
+                        const nextDueCheck = getNextDueDate(sub);
+                        if (nextDueCheck > end) return sub; // Expired, do nothing
+                    }
+
+                    const nextDue = getNextDueDate(sub);
+
+                    // If Due Date is Today OR in the past, pay it
+                    if (nextDue <= today) {
+                        // Double check end date logic locally just in case
+                        if (sub.endDate && nextDue > new Date(sub.endDate)) return sub;
+
+                        updated = true;
+
+                        // 1. Create Expense
+                        const expense = {
+                            id: Date.now() + Math.random(), // Ensure unique ID
+                            amount: sub.amount,
+                            note: `${sub.name} (Auto-Pay)`,
+                            category: sub.category,
+                            paidBy: personalMembers[0] || 'Me',
+                            splitWith: [personalMembers[0] || 'Me'],
+                            type: 'personal',
+                            date: nextDue.toISOString(), // Use the actual due date for record
+                        };
+                        newExpenses.push(expense);
+
+                        // 2. Update Subscription lastPaidDate
+                        // This causes getNextDueDate to advance to the NEXT cycle in the next render
+                        return { ...sub, lastPaidDate: nextDue.toISOString() };
+                    }
+
+                    return sub;
+                });
+
+                if (updated) {
+                    setExpenses(newExpenses);
+                    setSubscriptions(newSubscriptions);
+                    // Simple notification for now (could be toast)
+                    // setTimeout(() => alert('Auto-payments processed!'), 500); 
+                }
+
+            }, []); // Run ONCE on mount
+
             // Persistence
             useEffect(() => {
                 localStorage.setItem('travel_budget_map', JSON.stringify(budgets));
@@ -2234,7 +2408,8 @@
                 localStorage.setItem('travel_budget_expenses', JSON.stringify(expenses));
                 localStorage.setItem('travel_budget_personal_members', JSON.stringify(personalMembers));
                 localStorage.setItem('budget_subscriptions', JSON.stringify(subscriptions));
-            }, [budgets, groups, expenses, personalMembers, subscriptions]);
+                localStorage.setItem('budget_categories', JSON.stringify(categories));
+            }, [budgets, groups, expenses, personalMembers, subscriptions, categories]);
 
             // Calculations
             const totalPersonalBudget = useMemo(() => Object.values(budgets).reduce((a, b) => a + b, 0), [budgets]);
@@ -2413,6 +2588,7 @@
                     {
                         activeTab === 'home' ? (
                             <HomeTab
+                                categories={categories}
                                 totalBudget={totalBudget}
                                 totalSpent={totalSpent}
                                 remaining={remaining}
@@ -2421,11 +2597,11 @@
                                 groups={groups}
                                 expenses={expenses}
                                 isAdding={isAdding}
-                                setIsAdding={setIsAdding}
                                 handleAddExpense={handleAddExpense}
                             />
                         ) : activeTab === 'activity' ? (
                             <ActivityTab
+                                categories={categories}
                                 expenses={expenses}
                                 handleDeleteExpense={handleDeleteExpense}
                                 handleEditExpense={handleEditExpense}
@@ -2435,6 +2611,7 @@
                             />
                         ) : activeTab === 'subscriptions' ? (
                             <SubscriptionTab
+                                categories={categories}
                                 subscriptions={subscriptions}
                                 onAdd={handleAddSubscription}
                                 onDelete={handleDeleteSubscription}
@@ -2445,6 +2622,10 @@
                             />
                         ) : (
                             <Settings
+                                categories={categories}
+                                setCategories={setCategories}
+                                newCategoryName={newCategoryName}
+                                setNewCategoryName={setNewCategoryName}
                                 personalMembers={personalMembers}
                                 budgets={budgets}
                                 tempBudgets={tempBudgets}
@@ -2486,6 +2667,7 @@
                                         onCancel={() => setEditingExpense(null)}
                                         personalMembers={personalMembers}
                                         groups={groups}
+                                        categories={categories}
                                     />
                                 </Card>
                             </div>
@@ -2501,6 +2683,7 @@
                                         subscription={editingSubscription}
                                         onSave={handleUpdateSubscription}
                                         onCancel={() => setEditingSubscription(null)}
+                                        categories={categories}
                                     />
                                 </Card>
                             </div>
@@ -2513,7 +2696,7 @@
             );
         };
 
-        const ActivityTab = ({ expenses, handleDeleteExpense, handleEditExpense, personalMembers, budgets, groups }) => {
+        const ActivityTab = ({ expenses, handleDeleteExpense, handleEditExpense, personalMembers, budgets, groups, categories }) => {
             const [calendarView, setCalendarView] = useState('weekly'); // 'weekly' or 'monthly'
             const [selectedPerson, setSelectedPerson] = useState('all');
             const [currentDate, setCurrentDate] = useState(new Date());
@@ -2798,7 +2981,7 @@
                             filteredExpenses.length > 0 ? (
                                 <Card>
                                     {filteredExpenses.map(expense => (
-                                        <ExpenseItem key={expense.id} expense={expense} onDelete={handleDeleteExpense} onEdit={handleEditExpense} />
+                                        <ExpenseItem key={expense.id} expense={expense} onDelete={handleDeleteExpense} onEdit={handleEditExpense} categories={categories} />
                                     ))}
                                 </Card>
                             ) : (
@@ -2813,7 +2996,7 @@
                                     <div className="text-sm text-gray-400 mb-2 px-1">{date}</div>
                                     <Card>
                                         {dayExpenses.map(expense => (
-                                            <ExpenseItem key={expense.id} expense={expense} onDelete={handleDeleteExpense} onEdit={handleEditExpense} />
+                                            <ExpenseItem key={expense.id} expense={expense} onDelete={handleDeleteExpense} onEdit={handleEditExpense} categories={categories} />
                                         ))}
                                     </Card>
                                 </div>
