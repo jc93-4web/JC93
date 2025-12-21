@@ -123,6 +123,7 @@
 <body>
     <div id="root"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
@@ -2036,7 +2037,12 @@
             handleSaveSettings,
             categories,
             setCategories,
-            setNewCategoryName
+            newCategoryName,
+            setNewCategoryName,
+            supabaseSettings,
+            setSupabaseSettings,
+            pushToSupabase,
+            pullFromSupabase
         }) => {
             const toggleGroupMember = (person) => {
                 if (newGroupMembers.includes(person)) {
@@ -2051,6 +2057,70 @@
                     <h3 className="text-lg font-semibold text-gray-200 px-1 mb-4">Budget Settings</h3>
 
                     <div className="space-y-6">
+                        {/* Cloud Sync (Supabase) */}
+                        <Card>
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="p-2 rounded-full bg-emerald-500/20">
+                                    <Icons.Cloud className="text-emerald-400" />
+                                </div>
+                                <h3 className="text-lg font-bold text-white">Cloud Sync (Supabase)</h3>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs text-gray-400 mb-1">Supabase URL</label>
+                                    <input
+                                        type="text"
+                                        value={supabaseSettings.url}
+                                        onChange={(e) => setSupabaseSettings({ ...supabaseSettings, url: e.target.value })}
+                                        placeholder="https://xyz.supabase.co"
+                                        className="w-full glass-input rounded-xl p-2 text-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs text-gray-400 mb-1">Anon Key</label>
+                                    <input
+                                        type="password"
+                                        value={supabaseSettings.anonKey}
+                                        onChange={(e) => setSupabaseSettings({ ...supabaseSettings, anonKey: e.target.value })}
+                                        placeholder="eyJhbGciOiJIUzI1NiIsInR5..."
+                                        className="w-full glass-input rounded-xl p-2 text-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs text-gray-400 mb-1">Sync ID (Private Passcode)</label>
+                                    <input
+                                        type="text"
+                                        value={supabaseSettings.syncId}
+                                        onChange={(e) => setSupabaseSettings({ ...supabaseSettings, syncId: e.target.value })}
+                                        placeholder="my-secret-budget-id"
+                                        className="w-full glass-input rounded-xl p-2 text-sm"
+                                    />
+                                    <p className="text-[10px] text-gray-500 mt-1">
+                                        Use a unique ID to keep your data private and sync across devices.
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 pt-2">
+                                    <Button onClick={pushToSupabase} className="flex flex-col items-center gap-1 py-3 bg-emerald-600/20 border-emerald-500/30">
+                                        <Icons.Upload width={16} />
+                                        <span className="text-[10px] uppercase font-bold">Backup Now</span>
+                                    </Button>
+                                    <Button onClick={pullFromSupabase} className="flex flex-col items-center gap-1 py-3 bg-blue-600/20 border-blue-500/30">
+                                        <Icons.Download width={16} />
+                                        <span className="text-[10px] uppercase font-bold">Restore Cloud</span>
+                                    </Button>
+                                </div>
+
+                                {supabaseSettings.lastSync && (
+                                    <p className="text-[10px] text-center text-gray-400 mt-1">
+                                        Last synced: {new Date(supabaseSettings.lastSync).toLocaleString()}
+                                    </p>
+                                )}
+                            </div>
+                        </Card>
 
 
                         {/* Manage Categories */}
@@ -2341,6 +2411,12 @@
             const [newCategoryIcon, setNewCategoryIcon] = useState('MoreHorizontal'); // Default icon
             const [isManagingCategories, setIsManagingCategories] = useState(false);
 
+            // v3.3: Supabase Sync Settings
+            const [supabaseSettings, setSupabaseSettings] = useState(() => {
+                const saved = localStorage.getItem('budget_supabase_settings');
+                return saved ? JSON.parse(saved) : { url: '', anonKey: '', syncId: '', lastSync: null };
+            });
+
 
 
             // Persistence
@@ -2409,7 +2485,8 @@
                 localStorage.setItem('travel_budget_personal_members', JSON.stringify(personalMembers));
                 localStorage.setItem('budget_subscriptions', JSON.stringify(subscriptions));
                 localStorage.setItem('budget_categories', JSON.stringify(categories));
-            }, [budgets, groups, expenses, personalMembers, subscriptions, categories]);
+                localStorage.setItem('budget_supabase_settings', JSON.stringify(supabaseSettings));
+            }, [budgets, groups, expenses, personalMembers, subscriptions, categories, supabaseSettings]);
 
             // Calculations
             const totalPersonalBudget = useMemo(() => Object.values(budgets).reduce((a, b) => a + b, 0), [budgets]);
@@ -2500,6 +2577,96 @@
                     const newG = { ...tempGroups };
                     delete newG[name];
                     setTempGroups(newG);
+                }
+            };
+
+            // Supabase Sync logic
+            const getSupabaseClient = () => {
+                if (!supabaseSettings.url || !supabaseSettings.anonKey) return null;
+                try {
+                    return supabase.createClient(supabaseSettings.url, supabaseSettings.anonKey);
+                } catch (e) {
+                    console.error("Supabase init error", e);
+                    return null;
+                }
+            };
+
+            const pushToSupabase = async () => {
+                const client = getSupabaseClient();
+                if (!client) {
+                    alert('Please configure Supabase URL and Anon Key in Settings.');
+                    return;
+                }
+                if (!supabaseSettings.syncId) {
+                    alert('Please enter a Sync ID (your private passcode).');
+                    return;
+                }
+
+                const data = {
+                    budgets,
+                    groups,
+                    expenses,
+                    personalMembers,
+                    subscriptions,
+                    categories
+                };
+
+                try {
+                    const { error } = await client
+                        .from('sync_data')
+                        .upsert({
+                            id: supabaseSettings.syncId,
+                            data: data,
+                            updated_at: new Date().toISOString()
+                        });
+
+                    if (error) throw error;
+                    setSupabaseSettings({ ...supabaseSettings, lastSync: new Date().toISOString() });
+                    alert('Backup Successful (Cloud Push)!');
+                } catch (error) {
+                    alert(`Push Failed: ${error.message}`);
+                }
+            };
+
+            const pullFromSupabase = async () => {
+                const client = getSupabaseClient();
+                if (!client) {
+                    alert('Please configure Supabase URL and Anon Key in Settings.');
+                    return;
+                }
+                if (!supabaseSettings.syncId) {
+                    alert('Please enter your Sync ID.');
+                    return;
+                }
+
+                if (!confirm('This will OVERWRITE your local data with the cloud backup. Proceed?')) return;
+
+                try {
+                    const { data: result, error } = await client
+                        .from('sync_data')
+                        .select('data')
+                        .eq('id', supabaseSettings.syncId)
+                        .single();
+
+                    if (error) throw error;
+
+                    if (result && result.data) {
+                        const cloudData = result.data;
+                        // Update local state
+                        if (cloudData.budgets) setBudgets(cloudData.budgets);
+                        if (cloudData.groups) setGroups(cloudData.groups);
+                        if (cloudData.expenses) setExpenses(cloudData.expenses);
+                        if (cloudData.personalMembers) setPersonalMembers(cloudData.personalMembers);
+                        if (cloudData.subscriptions) setSubscriptions(cloudData.subscriptions);
+                        if (cloudData.categories) setCategories(cloudData.categories);
+
+                        setSupabaseSettings({ ...supabaseSettings, lastSync: new Date().toISOString() });
+                        alert('Restored from Cloud (Pull)!');
+                    } else {
+                        alert('No data found for this Sync ID.');
+                    }
+                } catch (error) {
+                    alert(`Pull Failed: ${error.message}`);
                 }
             };
 
@@ -2652,6 +2819,10 @@
                                 addGroup={addGroup}
                                 removeGroup={removeGroup}
                                 handleSaveSettings={handleSaveSettings}
+                                supabaseSettings={supabaseSettings}
+                                setSupabaseSettings={setSupabaseSettings}
+                                pushToSupabase={pushToSupabase}
+                                pullFromSupabase={pullFromSupabase}
                             />
                         )
                     }
